@@ -47,7 +47,7 @@
   }
 
   $(document).ready(function(){
-    var now, delta, deltaX = 0, deltaY = 0, firstTouch, _isPointerType
+    var now, delta, deltaX = 0, deltaY = 0, firstTouch, _isPointerType,lastTapDefaultPrevented;
 
     if ('MSGesture' in window) {
       gesture = new MSGesture()
@@ -80,7 +80,10 @@
         touchTimeout && clearTimeout(touchTimeout)
         touch.x1 = firstTouch.pageX
         touch.y1 = firstTouch.pageY
-        if (delta > 0 && delta <= 250) touch.isDoubleTap = true
+        if (delta > 0 && delta <= 250){
+            e.preventDefault();
+            touch.isDoubleTap = true;
+        }
         touch.last = now
         longTapTimeout = setTimeout(longTap, longTapDelay)
         // adds the current touch contact for IE gesture recognition
@@ -126,6 +129,10 @@
               var event = $.Event('tap')
               event.cancelTouch = cancelAll
               touch.el.trigger(event)
+                //判断是否
+              if(event.defaultPrevented){
+                  lastTapDefaultPrevented = true;
+              }
 
               // trigger double tap immediately
               if (touch.isDoubleTap) {
@@ -152,6 +159,12 @@
       // for example when a modal dialog is shown,
       // cancel all ongoing events
       .on('touchcancel MSPointerCancel pointercancel', cancelAll)
+        .on('click',function(e){
+            if (lastTapDefaultPrevented) {
+                lastTapDefaultPrevented = null;
+                e.preventDefault();
+            }
+        },true);
 
     // scrolling the window indicates intention of the user
     // to scroll, not tap or swipe, so cancel all ongoing events
